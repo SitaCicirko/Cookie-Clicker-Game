@@ -2,20 +2,29 @@ const cookieButton = document.getElementById("cookieButton");
 const makeCookies = document.getElementById("cookieCount");
 const deleteCookies = document.getElementById("deleteCookies");
 const loadCookies = document.getElementById("loadCookies");
+const startIntervalButton = document.getElementById("startInterval");
 
 let cookieCount = 0;
-let cookiesPerSecond = 1;
+let cookiesPerSecond = 10;
+let intervalStarted = false;
 
-setInterval(() => {
-  if (cookiesPerSecond > 0) {
-    cookieCount += cookiesPerSecond;
-    makeCookies.innerHTML = "Cookies: " + cookieCount;
+startIntervalButton.addEventListener("click", function () {
+  if (!intervalStarted) {
+    intervalStarted = true;
+    setInterval(() => {
+      if (cookiesPerSecond > 0) {
+        cookieCount += cookiesPerSecond;
+        makeCookies.innerHTML = "Cookies: " + cookieCount;
 
-    console.log("Interval running. Current cookie count:", cookieCount);
+        console.log("Interval running. Current cookie count:", cookieCount);
 
-    localStorage.setItem("cookies", JSON.stringify(cookieCount));
+        localStorage.setItem("cookies", JSON.stringify(cookieCount));
+      }
+    }, 1000);
+  } else {
+    console.log("Interval already started!");
   }
-}, 1000);
+});
 
 cookieButton.addEventListener("click", function () {
   cookieCount++;
@@ -47,21 +56,44 @@ deleteCookies.addEventListener("click", function () {
   console.log(cookieCount);
 });
 
-// async function getCookiesUpgrades() {
-//   try {
-//     const response = await fetch(
-//       "https://cookie-upgrade-api.vercel.app/api/upgrades"
-//     );
+async function getCookiesUpgrades() {
+  try {
+    const response = await fetch(
+      "https://cookie-upgrade-api.vercel.app/api/upgrades"
+    );
 
-//     const upgrades = await response.json();
-//     console.log("Upgrades:", upgrades);
+    const upgrades = await response.json();
+    console.log("Upgrades:", upgrades);
 
-//     showUpgrades(upgrades);
-//   } catch (error) {
-//     console.error("Error fetching upgrades:", error);
-//   }
-// }
+    showUpgrades(upgrades);
+  } catch (error) {
+    console.error("Error fetching upgrades:", error);
+  }
+}
 
-// getCookiesUpgrades();
+getCookiesUpgrades();
 
-// function showUpgrades(upgrades) {}
+function showUpgrades(upgrades) {
+  const upgradesContainer = document.getElementById("upgradesContainer");
+
+  upgrades.forEach((upgrade) => {
+    const upgradeButton = document.createElement("button");
+
+    upgradeButton.innerText = `${upgrade.name} - Cost: ${upgrade.cost} cookies`;
+    upgradeButton.addEventListener("click", () => buyUpgrade(upgrade));
+
+    upgradesContainer.appendChild(upgradeButton);
+  });
+}
+
+function buyUpgrade(upgrade) {
+  if (cookieCount >= upgrade.cost) {
+    cookieCount -= upgrade.cost;
+
+    makeCookies.innerHTML = "Cookies: " + cookieCount;
+
+    localStorage.setItem("cookies", cookieCount);
+  } else {
+    alert("You don't have enough cookies!");
+  }
+}
